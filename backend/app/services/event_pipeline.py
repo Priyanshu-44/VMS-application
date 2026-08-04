@@ -23,6 +23,7 @@ from app.core.geometry import point_in_polygon
 from app.services.camera_manager import camera_manager
 from app.services.detector import Detection, Detector
 from app.services.motion import MotionGate
+from app.services.pipeline_stats import pipeline_stats
 from app.services.recorder import recorder_manager
 from app.services.tracker import CameraTracker
 from app.services.ws_manager import ws_manager
@@ -113,6 +114,7 @@ class DetectionPipeline:
 
         if not self.motion_gate.detect(frame):
             return
+        pipeline_stats.record_motion(self.camera_id)
 
         now = time.time()
         zones = self._load_zones(now)
@@ -133,6 +135,7 @@ class DetectionPipeline:
                 dwell = track.dwell_seconds()
                 if dwell >= zone["dwell_seconds"] and not track.in_cooldown(now):
                     self._create_event(zone, det, dwell, frame, now)
+                    pipeline_stats.record_confirmed(self.camera_id)
                     track.start_cooldown(now)
 
         self.tracker.prune(now)

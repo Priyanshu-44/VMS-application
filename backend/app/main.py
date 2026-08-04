@@ -9,7 +9,7 @@ import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import cameras, events, recordings, ws, zones
+from app.api import analytics, cameras, dashboard, events, recordings, ws, zones
 from app.core.config import CORS_ORIGINS
 from app.core.db import db_session, init_db
 from app.services.camera_manager import camera_manager
@@ -39,6 +39,8 @@ app.include_router(zones.router)
 app.include_router(events.router)
 app.include_router(recordings.router)
 app.include_router(ws.router)
+app.include_router(dashboard.router)
+app.include_router(analytics.router)
 
 
 @app.on_event("startup")

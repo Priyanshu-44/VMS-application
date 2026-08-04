@@ -1,5 +1,6 @@
 """Detection zone CRUD (FR-14, Section 11)."""
 import json
+import sqlite3
 
 from fastapi import APIRouter, HTTPException
 
@@ -70,4 +71,20 @@ def delete_zone(zone_id: int):
         row = conn.execute("SELECT id FROM zones WHERE id = ?", (zone_id,)).fetchone()
         if not row:
             raise HTTPException(404, "Zone not found")
-        conn.execute("DELETE FROM zones WHERE id = ?", (zone_id,))
+
+        event_count = conn.execute(
+            "SELECT COUNT(*) AS c FROM events WHERE zone_id = ?", (zone_id,)
+        ).fetchone()["c"]
+        try:
+            conn.execute("DELETE FROM zones WHERE id = ?", (zone_id,))
+        except sqlite3.IntegrityError:
+            # This is a security product — an operator deleting a zone
+            # should never silently destroy the event/thumbnail history
+            # that references it. Disable is the supported way to turn a
+            # zone off; deletion is only for zones with no recorded history.
+            raise HTTPException(
+                409,
+                f"Cannot delete this zone: {event_count} event(s) reference it "
+                "(deleting would break their history). Disable the zone instead, "
+                "or delete those events first.",
+            )

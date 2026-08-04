@@ -2,7 +2,7 @@
 import json
 import time
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import StreamingResponse
 
 from app.core.config import MJPEG_BOUNDARY
@@ -105,3 +105,16 @@ def stream_camera(camera_id: int):
         _mjpeg_generator(camera_id),
         media_type=f"multipart/x-mixed-replace; boundary={MJPEG_BOUNDARY}",
     )
+
+
+@router.get("/{camera_id}/snapshot")
+def camera_snapshot(camera_id: int):
+    """A single still JPEG frame — used by the zone editor (FR-14: 'click on
+    a paused frame to place polygon points'), which needs a stable frame to
+    draw over rather than a live-updating stream."""
+    _ensure_capture_started(camera_id)
+    state = camera_manager.get(camera_id)
+    jpeg = state.get_latest_jpeg() if state else None
+    if jpeg is None:
+        raise HTTPException(503, "No frame available yet")
+    return Response(content=jpeg, media_type="image/jpeg")

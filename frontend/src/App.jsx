@@ -3,7 +3,9 @@ import Layout from './components/Layout'
 import LiveGrid from './pages/LiveGrid'
 import PlaybackPage from './pages/PlaybackPage'
 import EventsPage from './pages/EventsPage'
-import ComingSoon from './pages/ComingSoon'
+import DashboardPage from './pages/DashboardPage'
+import AnalyticsPage from './pages/AnalyticsPage'
+import ZonesPage from './pages/ZonesPage'
 
 function App() {
   return (
@@ -13,9 +15,9 @@ function App() {
           <Route path="/" element={<LiveGrid />} />
           <Route path="/playback/:cameraId" element={<PlaybackPage />} />
           <Route path="/events" element={<EventsPage />} />
-          <Route path="/dashboard" element={<ComingSoon title="Dashboard" />} />
-          <Route path="/analytics" element={<ComingSoon title="Analytics" />} />
-          <Route path="/zones" element={<ComingSoon title="Zone Editor" />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/zones" element={<ZonesPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

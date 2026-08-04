@@ -8,7 +8,18 @@ async function request(path, options = {}) {
   })
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    throw new Error(`${options.method || 'GET'} ${path} failed: ${res.status} ${text}`)
+    // FastAPI error bodies are {"detail": "..."} — surface just that message
+    // when present, it's already written to be shown to a human.
+    let message = text
+    try {
+      const parsed = JSON.parse(text)
+      if (typeof parsed.detail === 'string') message = parsed.detail
+    } catch {
+      // not JSON, fall back to raw text
+    }
+    const err = new Error(message || `${options.method || 'GET'} ${path} failed: ${res.status}`)
+    err.status = res.status
+    throw err
   }
   if (res.status === 204) return null
   return res.json()
@@ -22,6 +33,7 @@ export const api = {
   listCameras: () => request('/cameras'),
   getCamera: (id) => request(`/cameras/${id}`),
   streamUrl: (id) => `${API_BASE}/cameras/${id}/stream`,
+  snapshotUrl: (id) => `${API_BASE}/cameras/${id}/snapshot?t=${Date.now()}`,
 
   // Zones
   listZonesForCamera: (cameraId) => request(`/cameras/${cameraId}/zones`),
