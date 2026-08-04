@@ -1,0 +1,10 @@
+fastapi>=0.115.6
+uvicorn[standard]>=0.34.0
+python-multipart>=0.0.20
+websockets>=14.1
+opencv-python>=4.11.0.86
+ultralytics>=8.3.55
+numpy>=2.1.0
+aiofiles>=24.1.0
+pydantic>=2.10.4
+python-dotenv>=1.0.1

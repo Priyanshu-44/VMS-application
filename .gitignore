@@ -1,0 +1,32 @@
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# YOLO weights (auto-downloaded, don't bloat the repo)
+*.pt
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Data (generated at runtime / large binaries — sample clips tracked via README instructions or Git LFS if needed)
+data/db/*.sqlite3
+data/recordings/*
+data/thumbnails/*
+!data/recordings/.gitkeep
+!data/thumbnails/.gitkeep
+
+# Env
+.env
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local Claude Code session settings (not project config)
+.claude/settings.local.json
