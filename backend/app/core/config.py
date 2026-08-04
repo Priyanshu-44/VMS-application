@@ -22,6 +22,7 @@ for d in (DATA_DIR / "db", RECORDINGS_DIR, THUMBNAILS_DIR, SAMPLE_CLIPS_DIR):
 YOLO_MODEL = "yolov8n.pt"          # nano model, CPU-friendly
 RELEVANT_CLASSES = {"person", "car", "truck", "bus", "bicycle", "motorcycle"}
 DEFAULT_CONFIDENCE_THRESHOLD = 0.5
+DETECTION_INFERENCE_FLOOR = 0.2      # run YOLO at this floor; per-zone sensitivity filters on top
 DEFAULT_DWELL_SECONDS = 2
 EVENT_COOLDOWN_SECONDS = 8          # suppress duplicate events per track
 ANALYSIS_FPS = 12                    # throttle detection loop (NFR: keep UI responsive)

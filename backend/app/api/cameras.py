@@ -1,4 +1,5 @@
 """Camera registry + live MJPEG streaming endpoints (FR-1, Section 11)."""
+import json
 import time
 
 from fastapi import APIRouter, HTTPException
@@ -6,7 +7,7 @@ from fastapi.responses import StreamingResponse
 
 from app.core.config import MJPEG_BOUNDARY
 from app.core.db import db_session
-from app.models.schemas import CameraCreate, CameraOut
+from app.models.schemas import CameraCreate, CameraOut, ZoneOut
 from app.services.camera_manager import camera_manager
 
 router = APIRouter(prefix="/cameras", tags=["cameras"])
@@ -52,6 +53,20 @@ def get_camera(camera_id: int):
         if not row:
             raise HTTPException(404, "Camera not found")
         return _row_to_camera(row)
+
+
+@router.get("/{camera_id}/zones", response_model=list[ZoneOut])
+def list_zones_for_camera(camera_id: int):
+    with db_session() as conn:
+        rows = conn.execute("SELECT * FROM zones WHERE camera_id = ? ORDER BY id", (camera_id,)).fetchall()
+        return [
+            ZoneOut(
+                id=r["id"], camera_id=r["camera_id"], name=r["name"],
+                polygon=json.loads(r["polygon"]), enabled=bool(r["enabled"]),
+                sensitivity=r["sensitivity"], dwell_seconds=r["dwell_seconds"],
+            )
+            for r in rows
+        ]
 
 
 def _ensure_capture_started(camera_id: int):

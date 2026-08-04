@@ -4,13 +4,18 @@ Smart VMS backend entry point.
 Run with:  uvicorn app.main:app --reload --port 8000   (from backend/)
 Interactive API docs:  http://localhost:8000/docs
 """
+import asyncio
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import cameras
+from app.api import cameras, events, recordings, ws, zones
 from app.core.config import CORS_ORIGINS
 from app.core.db import db_session, init_db
 from app.services.camera_manager import camera_manager
+from app.services.event_pipeline import pipeline_manager
+from app.services.recorder import recorder_manager
+from app.services.ws_manager import ws_manager
 
 app = FastAPI(
     title="Smart VMS API",
@@ -30,17 +35,25 @@ app.add_middleware(
 )
 
 app.include_router(cameras.router)
+app.include_router(zones.router)
+app.include_router(events.router)
+app.include_router(recordings.router)
+app.include_router(ws.router)
 
 
 @app.on_event("startup")
 def on_startup():
     init_db()
-    # Start capture threads for every camera already registered in the DB
-    # so streams and the (future) detection pipeline are warm immediately.
+    ws_manager.set_loop(asyncio.get_running_loop())
+
+    # Start capture, recording, and detection threads for every camera
+    # already registered in the DB so the whole pipeline is warm immediately.
     with db_session() as conn:
         rows = conn.execute("SELECT * FROM cameras").fetchall()
         for row in rows:
             camera_manager.register(row["id"], row["source"], row["name"])
+            recorder_manager.start(row["id"])
+            pipeline_manager.start(row["id"])
 
 
 @app.get("/", tags=["health"])
