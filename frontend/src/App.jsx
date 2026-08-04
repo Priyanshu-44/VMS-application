@@ -1,11 +1,24 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Layout from './components/Layout'
+import LiveGrid from './pages/LiveGrid'
+import PlaybackPage from './pages/PlaybackPage'
+import EventsPage from './pages/EventsPage'
+import ComingSoon from './pages/ComingSoon'
+
 function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg text-text">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold">Smart VMS</h1>
-        <p className="text-text-dim mt-2">Frontend scaffold ready — pages land in Stage 3.</p>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<LiveGrid />} />
+          <Route path="/playback/:cameraId" element={<PlaybackPage />} />
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/dashboard" element={<ComingSoon title="Dashboard" />} />
+          <Route path="/analytics" element={<ComingSoon title="Analytics" />} />
+          <Route path="/zones" element={<ComingSoon title="Zone Editor" />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
 

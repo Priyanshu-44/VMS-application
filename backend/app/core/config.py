@@ -3,6 +3,8 @@ Central configuration for the Smart VMS backend.
 Paths are resolved relative to the repo root so the app can be run from
 anywhere (uvicorn app.main:app run from backend/, or packaged).
 """
+import os
+import sys
 from pathlib import Path
 
 # backend/app/core/config.py -> backend/app/core -> backend/app -> backend -> repo root
@@ -17,6 +19,17 @@ THUMBNAILS_DIR = DATA_DIR / "thumbnails"
 
 for d in (DATA_DIR / "db", RECORDINGS_DIR, THUMBNAILS_DIR, SAMPLE_CLIPS_DIR):
     d.mkdir(parents=True, exist_ok=True)
+
+# OpenCV's bundled FFmpeg loads the OpenH264 codec DLL dynamically at runtime
+# (not statically linked, for licensing reasons) — it must be discoverable on
+# the DLL search path regardless of the process's cwd. Without it, VideoWriter
+# silently falls back to 'mp4v', which browsers refuse to play in <video>
+# (verified during Stage 3: MEDIA_ERR_SRC_NOT_SUPPORTED despite the HTTP layer
+# serving 206 Partial Content fine).
+VENDOR_DIR = BACKEND_DIR / "vendor"
+if sys.platform == "win32" and VENDOR_DIR.exists():
+    os.add_dll_directory(str(VENDOR_DIR))
+    os.environ["PATH"] = str(VENDOR_DIR) + os.pathsep + os.environ.get("PATH", "")
 
 # --- Detection pipeline defaults (overridable per-zone via DB) ---
 YOLO_MODEL = "yolov8n.pt"          # nano model, CPU-friendly

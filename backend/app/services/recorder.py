@@ -56,8 +56,16 @@ class RecorderManager:
         ts = time.time()
         filename = f"{int(ts)}.mp4"
         path = self._camera_dir(camera_id) / filename
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        # H.264 (avc1), not the default mp4v — browsers won't play mp4v in
+        # <video> (see app/core/config.py's VENDOR_DIR comment for why this
+        # needs the bundled OpenH264 DLL to actually encode, not just open).
+        fourcc = cv2.VideoWriter_fourcc(*"avc1")
         writer = cv2.VideoWriter(str(path), fourcc, fps, frame_size)
+        if not writer.isOpened():
+            raise RuntimeError(
+                f"VideoWriter failed to open for camera {camera_id} with H.264 (avc1). "
+                "Is vendor/openh264-2.5.0-win64.dll present?"
+            )
 
         with db_session() as conn:
             cur = conn.execute(

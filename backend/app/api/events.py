@@ -2,6 +2,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import FileResponse
 
 from app.core.db import db_session
 from app.models.schemas import EventOut
@@ -63,6 +64,17 @@ def get_event(event_id: int):
         if not row:
             raise HTTPException(404, "Event not found")
         return _row_to_event(row)
+
+
+@router.get("/{event_id}/thumbnail")
+def get_thumbnail(event_id: int):
+    """Serves the cropped detection thumbnail as an image, so the frontend
+    never needs to know the server's filesystem layout."""
+    with db_session() as conn:
+        row = conn.execute("SELECT thumbnail_path FROM events WHERE id = ?", (event_id,)).fetchone()
+        if not row or not row["thumbnail_path"]:
+            raise HTTPException(404, "Thumbnail not found")
+        return FileResponse(row["thumbnail_path"], media_type="image/jpeg")
 
 
 @router.post("/{event_id}/acknowledge", response_model=EventOut)

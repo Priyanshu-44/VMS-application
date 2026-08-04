@@ -18,8 +18,9 @@ data/thumbnails/*
 !data/recordings/.gitkeep
 !data/thumbnails/.gitkeep
 
-# Env
-.env
+# Env (frontend/.env itself is committed on purpose — no secrets, just the
+# localhost API URL judges need to run the demo unmodified; only ignore overrides)
+.env.local
 *.local
 
 # OS / editor
