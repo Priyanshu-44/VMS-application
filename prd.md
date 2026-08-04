@@ -4,8 +4,8 @@
 **Event:** A-1 Launchpad 2026 — Round 2 (Software Development / AI-ML track)
 **Case Study:** Smart Video Management System (VMS)
 **Deadline:** 9 August 2026 (Sunday), 11:59 PM — submit on Unstop
-**Document owner:** _[Your name]_ · **Team:** _[Team name]_ · **College:** _[College name]_
-**Status:** Draft v1.0 · **Last updated:** _[date]_
+**Document owner:** Priyanshu Verma · **Team:** Byte Breakers · **College:** National Institute of Technology Delhi
+**Status:** Build complete (Stages 1–4 of Section 15) · **Last updated:** 5 August 2026
 
 ---
 
@@ -265,14 +265,16 @@ Key techniques to name in the PDF: background subtraction (MOG2), single-stage o
 
 ## 15. Milestones — 5-day plan
 
-| Day | Date | Deliverable |
-|---|---|---|
-| 1 | Aug 4 | Repo + FastAPI skeleton; YOLOv8 running on webcam + sample clips; SQLite schema locked; scope frozen |
-| 2 | Aug 5 | Detection zones (polygon + point-in-polygon); event generation with thumbnail + clip; class/confidence filter |
-| 3 | Aug 6 | Frontend: live grid, player, and the timeline with markers + click-to-seek (protect this day) |
-| 4 | Aug 7 | Dashboard tiles, analytics view, loitering/dwell rule, visual polish |
-| 5 | Aug 8 | **Feature freeze.** Record demo video; write 3-page PDF; clean README + sample data |
-| — | Aug 9 | Buffer + morning submission (do not wait until 11:58 PM) |
+| Day | Date | Deliverable | Status |
+|---|---|---|---|
+| 1 | Aug 4 | Repo + FastAPI skeleton; YOLOv8 running on webcam + sample clips; SQLite schema locked; scope frozen | ✅ Done — YOLOv8n verified live on all 4 clips, correctly returns zero detections on the false-positive control clip |
+| 2 | Aug 5 | Detection zones (polygon + point-in-polygon); event generation with thumbnail + clip; class/confidence filter | ✅ Done — full 4-layer pipeline (motion→class→zone→dwell/cooldown), verified end-to-end with real thumbnails/clips/WS push |
+| 3 | Aug 6 | Frontend: live grid, player, and the timeline with markers + click-to-seek (protect this day) | ✅ Done — verified live in-browser, including fixing a codec bug that silently broke playback (mp4v → H.264) |
+| 4 | Aug 7 | Dashboard tiles, analytics view, loitering/dwell rule, visual polish | ✅ Done — analytics verified showing 85.9% false-alarm reduction from real running detection |
+| 5 | Aug 8 | **Feature freeze.** Record demo video; write 3-page PDF; clean README + sample data | ⏳ README, acknowledgements, and PDF/demo-script content drafted (`docs/`); the demo video recording and final PDF export are yours to do — see `docs/` |
+| — | Aug 9 | Buffer + morning submission (do not wait until 11:58 PM) | — |
+
+_Note: Stages 1–4 were built and verified in a single accelerated session on 4–5 Aug 2026 rather than literally one calendar day each — the milestone content and verification bar were kept intact regardless._
 
 ## 16. Deliverables (mapped to Unstop submission requirements)
 
@@ -323,7 +325,7 @@ Key techniques to name in the PDF: background subtraction (MOG2), single-stage o
 
 ## 21. Acknowledgements / references
 
-To be completed before submission — list every library, model, dataset, and asset used (e.g. Ultralytics YOLOv8, OpenCV, FastAPI, React, Tailwind, sample surveillance clips and their source/license). Required by the case-study rules.
+**Done — see [README.md](README.md#acknowledgements)** for the full list with sources and licenses (Ultralytics YOLOv8, OpenCV, Cisco OpenH264, FastAPI, React, Vite, Tailwind CSS, Recharts, react-router-dom, and the 4 Mixkit sample clips with direct links).
 
 ---
 
