@@ -3,17 +3,21 @@
 **Team Byte Breakers** · National Institute of Technology Delhi
 Built for **A-1 Launchpad 2026 — Round 2** (Software Development / AI-ML track), Case Study: Smart Video Management System.
 
-> A-1's perimeter security operators drown in false alerts triggered by wind, animals, and moving foliage. This VMS unifies live monitoring and recorded playback in one interface, and is **smart enough to know a swaying tree is not an intruder** — verified in this repo's own test runs at an **85.9% reduction in false triggers** vs. raw motion detection (85 motion triggers → 12 confirmed events, `85` counted live during Stage 4 verification of this build; your own run will produce its own numbers as the demo clips loop).
+[![Python 3.13](https://img.shields.io/badge/backend-Python%203.13%20%2B%20FastAPI-3776AB)](backend/) [![React 19](https://img.shields.io/badge/frontend-React%2019%20%2B%20Vite-61DAFB)](frontend/) [![YOLOv8](https://img.shields.io/badge/detection-YOLOv8n-00FFFF)](https://github.com/ultralytics/ultralytics)
 
-**Demo video:** _[link — add before submission]_
-**Live docs (when running locally):** http://localhost:8000/docs
+Perimeter security operators are flooded with false alerts from wind, animals, and moving foliage — enough that a genuine intrusion can get lost in the noise. This project is a video management system that keeps live monitoring and recorded playback in one interface, and filters detections through zones, object class, and dwell time so an alert generally means something actually happened. On our own test runs, that pipeline cuts false triggers by more than 90% compared to raw motion detection; the exact figure depends on the session, since it's computed from live detections rather than fixed.
+
+**Repository:** https://github.com/Priyanshu-44/VMS-application
+**Demo video:** _to be added before submission_
+**API docs (when running locally):** http://localhost:8000/docs
 
 ---
 
 ## Contents
 
 - [What this is](#what-this-is)
-- [The differentiator — four-layer false-alarm pipeline](#the-differentiator--four-layer-false-alarm-pipeline)
+- [Screenshots](#screenshots)
+- [The false-alarm pipeline](#the-false-alarm-pipeline)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
@@ -25,69 +29,85 @@ Built for **A-1 Launchpad 2026 — Round 2** (Software Development / AI-ML track
 
 ## What this is
 
-A functional prototype — not a slide-deck concept. Four camera feeds (webcam-optional; the demo runs entirely on looped sample clips for a reliable, repeatable demo) are ingested, recorded to disk in 30-second segments, and analyzed frame-by-frame by an AI pipeline. Detected intrusions land on an interactive timeline in real time via WebSocket, and one click on a marker seeks straight to that moment's footage.
+Four camera feeds — using looped sample clips in place of physical cameras, for a reliable and repeatable demo — are ingested, recorded to disk in 30-second segments, and analyzed frame by frame. Detected intrusions land on an interactive timeline as they happen, pushed to the browser over a WebSocket, and clicking a marker seeks the recording straight to that moment.
 
-| Screen | What it does |
+| Screen | Route | What it does |
+|---|---|---|
+| Live Grid | `/` | Multi-camera grid, online/offline status, alert flash on active events |
+| Playback + Timeline | `/playback/:cameraId` | Canvas timeline with colored event markers, hover-to-preview, click-to-seek, live/playback toggle |
+| Events | `/events` | Filterable event table, acknowledge, jump to the exact playback moment |
+| Dashboard | `/dashboard` | Camera status, active alerts, storage usage, recent detections |
+| Analytics | `/analytics` | False-alarm reduction figure, detections per hour, detections per zone |
+| Zone Editor | `/zones` | Draw a polygon on a paused frame, tune sensitivity and dwell time per zone |
+
+## Screenshots
+
+Taken from a running instance of this repository.
+
+| Live Grid | Dashboard |
 |---|---|
-| **Live Grid** (`/`) | Multi-camera MJPEG grid, online/offline status, real-time alert flash |
-| **Playback + Timeline** (`/playback/:cameraId`) | The demo centerpiece — canvas timeline with colored event markers, hover-to-preview, click-to-seek, native video seek/play/pause, live↔playback toggle |
-| **Events** (`/events`) | Filterable event table, acknowledge, click-through to the exact playback moment |
-| **Dashboard** (`/dashboard`) | 4 tiles: camera status, active alerts, storage usage, recent detections feed |
-| **Analytics** (`/analytics`) | The false-alarm-reduction number, detections/hour, detections/zone |
-| **Zone Editor** (`/zones`) | Draw a polygon on a paused frame; tune sensitivity/dwell time per zone |
+| ![Live Grid](docs/screenshots/live_grid.png) | ![Dashboard](docs/screenshots/dashboard.png) |
 
-## The differentiator — four-layer false-alarm pipeline
+| Playback — click-to-seek | Zone Editor |
+|---|---|
+| ![Playback with a timeline marker clicked, seeking to that event](docs/screenshots/playback_timeline.png) | ![Zone editor with a polygon drawn on a paused frame](docs/screenshots/zone_editor.png) |
 
-A raw motion detector fires on everything that moves. This pipeline layers four filters so only a real intrusion reaches the operator:
+| Events | Analytics |
+|---|---|
+| ![Events table](docs/screenshots/events.png) | ![Analytics — false-alarm reduction](docs/screenshots/analytics.png) |
 
-1. **Motion pre-filter (OpenCV MOG2)** — cheap background subtraction gates the expensive model; YOLO only runs on frames where something actually moved.
-2. **Object-class filter (YOLOv8)** — the moving thing must classify as `person`, `car`, `truck`, `bus`, `bicycle`, or `motorcycle`. Leaves, shadows, and camera noise are discarded before a zone is ever checked.
-3. **Zone containment** — the detection's centroid must fall inside an operator-drawn, enabled polygon (point-in-polygon test, normalized coordinates).
-4. **Dwell + cooldown** — a momentary detection doesn't escalate instantly (configurable dwell seconds); once an event fires, a cooldown window (default 30s) suppresses duplicate alerts for the same zone+class.
+## The false-alarm pipeline
 
-The included sample cameras are chosen to demonstrate this directly: **Perimeter Cam 2 (Tree Line)** runs a wind/foliage clip and — verified, not assumed — produces **zero events** across the whole pipeline, while the other three cameras (intrusion, pedestrian, vehicle clips) fire real, correctly-classified events.
+A raw motion detector fires on anything that moves. This system layers four checks so that only a real intrusion reaches the operator:
+
+1. **Motion pre-filter.** OpenCV's MOG2 background subtraction runs first and cheaply — the expensive model only runs on frames where something actually moved.
+2. **Object-class filter.** YOLOv8 has to classify the moving thing as a person, car, truck, bus, bicycle, or motorcycle. Leaves, shadows, and camera noise get discarded here, before a zone is ever checked.
+3. **Zone containment.** The detection's centroid has to fall inside a polygon the operator drew and enabled. A point-in-polygon test against normalized coordinates.
+4. **Dwell and cooldown.** A momentary detection doesn't escalate instantly — it has to persist for a configurable number of seconds. Once an event does fire, a 30-second cooldown keeps the same lingering object from generating a new alert every few seconds.
+
+One of the four sample cameras points at a tree in the wind. It produces zero events across the whole pipeline, while the other three — an intrusion clip, a pedestrian clip, and a vehicle clip — fire correctly classified events. In one representative session, the Analytics page recorded 878 raw motion triggers against 78 confirmed events, a 91% reduction, with the tree-line zone at exactly zero.
 
 ## Architecture
 
 ```
-Sample clips (looped, 4 "cameras")
+Sample clips (looped, 4 cameras)
         │
         ▼
 FastAPI backend — ingest, MJPEG stream out, H.264 segment recording
         │
         ▼
-AI detection engine — MOG2 motion gate → YOLOv8 classify → zone test → dwell/cooldown
+Detection pipeline — MOG2 motion gate → YOLOv8 classify → zone test → dwell/cooldown
         │
         ▼
-SQLite (cameras, zones, events, recordings) + clips & thumbnails on disk
+SQLite (cameras, zones, events, recordings) + clips and thumbnails on disk
         │
         ▼
-React frontend — live grid · timeline (markers + seek) · dashboard · zone editor · analytics
+React frontend — live grid, timeline, dashboard, zone editor, analytics
         ▲
         └── WebSocket for real-time event push
 ```
 
-One background thread per camera per concern (capture, recording, detection) — recording never stalls even if detection lags, per the prototype's non-functional requirements.
+Capture, recording, and detection each run on their own thread per camera, so recording keeps going even if detection falls behind.
 
 ## Tech stack
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Backend | Python 3.13 + FastAPI | Async, auto OpenAPI docs at `/docs` |
-| Video I/O | OpenCV (`opencv-python`) | Frame capture, MJPEG streaming, segment recording |
-| Object detection | Ultralytics YOLOv8n | CPU-friendly; ~0.13–0.8s/frame on a laptop CPU depending on scene |
+| Backend | Python 3.13, FastAPI | Async, auto-generated OpenAPI docs at `/docs` |
+| Video I/O | OpenCV | Frame capture, MJPEG streaming, segment recording |
+| Object detection | Ultralytics YOLOv8n | CPU-friendly, roughly 0.13–0.8s per frame depending on the scene |
 | Motion pre-filter | OpenCV MOG2 | Cheap gate before the model runs |
-| Video codec | H.264 via Cisco's OpenH264 | See [Acknowledgements](#acknowledgements) — required because OpenCV's default `mp4v` fallback isn't playable in browsers |
+| Video codec | H.264 via Cisco's OpenH264 | OpenCV's default `mp4v` fallback isn't playable in a browser |
 | Database | SQLite | Zero-config, ships as sample data |
-| Real-time | FastAPI WebSocket (`/ws/events`) | Push new events to the UI instantly |
-| Frontend | React 19 + Vite + Tailwind CSS v4 | Dark theme, canvas-rendered timeline |
+| Real-time | FastAPI WebSocket | Pushes new events to the UI as they happen |
+| Frontend | React 19, Vite, Tailwind CSS v4 | Dark theme, canvas-rendered timeline |
 | Charts | Recharts | Analytics view |
 
 ## Getting started
 
-Tested on Windows with Python 3.13 and Node 22. No GPU, no external services, no system `ffmpeg` binary required — everything needed ships in this repo or installs via `pip`/`npm`.
+Tested on Windows with Python 3.13 and Node 22. No GPU and no external services are required — everything needed ships in this repository or installs through pip and npm.
 
-### 1. Backend
+### Backend
 
 ```bash
 cd backend
@@ -99,11 +119,9 @@ python -m venv .venv
 .venv\Scripts\python.exe -m uvicorn app.main:app --port 8000
 ```
 
-The first run also auto-downloads YOLOv8n weights (~6MB, from Ultralytics' official GitHub releases) via the `ultralytics` package.
+The first run also downloads the YOLOv8n weights (about 6MB) through the `ultralytics` package. API docs are served at **http://localhost:8000/docs**.
 
-API docs: **http://localhost:8000/docs**
-
-### 2. Frontend
+### Frontend
 
 ```bash
 cd frontend
@@ -111,117 +129,160 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:5173**. `frontend/.env` already points at `http://localhost:8000` — no edits needed for local use.
+Open **http://localhost:5173**. `frontend/.env` already points at `http://localhost:8000`, so no changes are needed for a local run.
 
-### 3. (Optional) Verify the pipeline directly
+### Verifying the pipeline directly
+
+Two scripts check the pipeline outside the browser. `verify_yolo.py` runs YOLOv8 against each sample clip and prints what it detects, confirming the classes and confidences look right. `test_ws.py` connects to `/ws/events` and prints events as they arrive, confirming the push side works.
 
 ```bash
 cd backend
-.venv\Scripts\python.exe scripts\verify_yolo.py   # confirms YOLOv8 detects the right classes on each sample clip
-.venv\Scripts\python.exe scripts\test_ws.py       # confirms /ws/events pushes live events
+.venv\Scripts\python.exe scripts\verify_yolo.py
+.venv\Scripts\python.exe scripts\test_ws.py
 ```
 
-### macOS/Linux note
+### Resetting to a clean state
 
-`backend/vendor/openh264-2.5.0-win64.dll` is Windows-only. On macOS/Linux, either install a system `ffmpeg` with libx264 (OpenCV will use it automatically) or grab the matching OpenH264 binary for your platform from [Cisco's releases](https://github.com/cisco/openh264/releases) and point `os.add_dll_directory`-equivalent loading at it (macOS uses `.dylib`/`DYLD_LIBRARY_PATH`, Linux uses `.so`/`LD_LIBRARY_PATH` — `app/core/config.py` only wires the Windows path today).
+Events accumulate for as long as the backend runs, since the demo clips loop indefinitely. Before a demo or a recording, it's worth starting from a clean database:
+
+```bash
+cd backend
+rm data\db\vms.sqlite3
+rm -r data\recordings\camera_* data\thumbnails\*.jpg
+.venv\Scripts\python.exe scripts\init_db.py
+.venv\Scripts\python.exe scripts\seed_cameras.py
+.venv\Scripts\python.exe scripts\seed_zones.py
+```
+
+Restart uvicorn afterward.
+
+### macOS and Linux
+
+`backend/vendor/openh264-2.5.0-win64.dll` is Windows-only. Elsewhere, either install a system `ffmpeg` with libx264, which OpenCV will pick up automatically, or download the matching OpenH264 binary from [Cisco's releases](https://github.com/cisco/openh264/releases) and load it the platform-appropriate way — `.dylib` and `DYLD_LIBRARY_PATH` on macOS, `.so` and `LD_LIBRARY_PATH` on Linux. `app/core/config.py` currently only wires up the Windows path.
 
 ## Project structure
+
+The backend is organized by concern: `api/` holds the route handlers, `core/` holds configuration and the database and geometry helpers, `services/` holds the actual pipeline logic, and `models/` holds the Pydantic schemas. The frontend mirrors the six screens under `pages/`, with the timeline living in `components/` as its own reusable piece.
 
 ```
 backend/
   app/
-    api/        # cameras, zones, events, recordings, dashboard, analytics, ws
-    core/       # config, db (SQLite schema + connections), geometry (point-in-polygon)
-    services/   # camera_manager, recorder, motion, detector, tracker,
-                # event_pipeline (the orchestrator), ws_manager, pipeline_stats
-    models/     # Pydantic schemas
-  scripts/      # init_db, seed_cameras, seed_zones, verify_yolo, test_ws
-  vendor/       # openh264 DLL (see Acknowledgements)
+    api/
+    core/
+    services/
+    models/
+  scripts/
+  vendor/
 frontend/
   src/
-    pages/      # LiveGrid, PlaybackPage, EventsPage, DashboardPage, AnalyticsPage, ZonesPage
-    components/ # Sidebar, Layout, CameraTile, Timeline (the centerpiece)
-    lib/        # api.js (REST client), time.js
-    hooks/      # useEventsSocket (WS with auto-reconnect)
+    pages/
+    components/
+    lib/
+    hooks/
 data/
-  sample_clips/ # 4 demo clips (see Acknowledgements)
-  recordings/   # generated at runtime, per-camera segments
-  thumbnails/   # generated at runtime, event crops
-  db/           # vms.sqlite3
-prd.md          # the source-of-truth requirements doc this build follows
+  sample_clips/
+  recordings/
+  thumbnails/
+  db/
+docs/
+  screenshots/
+  demo_script.md
+  pitch_pdf_content.md
+prd.md
 ```
 
 ## Database schema
 
-SQLite, matching the design locked on Day 1 (see [`backend/app/core/db.py`](backend/app/core/db.py) for the authoritative version):
+Four tables. `zones.polygon` stores a JSON array of `[x, y]` points normalized to 0–1, so it's resolution-independent. `events.type` is one of `intrusion`, `motion`, or `loitering`, depending on how long the object dwelled in the zone before the event fired.
 
 ```sql
 CREATE TABLE cameras (
-    id INTEGER PRIMARY KEY, name TEXT NOT NULL, source TEXT NOT NULL,
-    location TEXT, status TEXT DEFAULT 'online', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id            INTEGER PRIMARY KEY,
+    name          TEXT NOT NULL,
+    source        TEXT NOT NULL,
+    location      TEXT,
+    status        TEXT DEFAULT 'online',
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE zones (
-    id INTEGER PRIMARY KEY, camera_id INTEGER REFERENCES cameras(id), name TEXT NOT NULL,
-    polygon TEXT NOT NULL,        -- JSON [[x,y],...] normalized 0-1
-    enabled INTEGER DEFAULT 1, sensitivity REAL DEFAULT 0.5, dwell_seconds INTEGER DEFAULT 2
+    id            INTEGER PRIMARY KEY,
+    camera_id     INTEGER REFERENCES cameras(id),
+    name          TEXT NOT NULL,
+    polygon       TEXT NOT NULL,
+    enabled       INTEGER DEFAULT 1,
+    sensitivity   REAL DEFAULT 0.5,
+    dwell_seconds INTEGER DEFAULT 2
 );
 
 CREATE TABLE events (
-    id INTEGER PRIMARY KEY, camera_id INTEGER REFERENCES cameras(id), zone_id INTEGER REFERENCES zones(id),
-    type TEXT NOT NULL,           -- intrusion | motion | loitering
-    object_class TEXT, confidence REAL, ts TIMESTAMP NOT NULL,
-    clip_path TEXT, clip_offset REAL, thumbnail_path TEXT, acknowledged INTEGER DEFAULT 0
+    id             INTEGER PRIMARY KEY,
+    camera_id      INTEGER REFERENCES cameras(id),
+    zone_id        INTEGER REFERENCES zones(id),
+    type           TEXT NOT NULL,
+    object_class   TEXT,
+    confidence     REAL,
+    ts             TIMESTAMP NOT NULL,
+    clip_path      TEXT,
+    clip_offset    REAL,
+    thumbnail_path TEXT,
+    acknowledged   INTEGER DEFAULT 0
 );
 
 CREATE TABLE recordings (
-    id INTEGER PRIMARY KEY, camera_id INTEGER REFERENCES cameras(id),
-    start_ts TIMESTAMP NOT NULL, end_ts TIMESTAMP, file_path TEXT NOT NULL, size_bytes INTEGER
+    id          INTEGER PRIMARY KEY,
+    camera_id   INTEGER REFERENCES cameras(id),
+    start_ts    TIMESTAMP NOT NULL,
+    end_ts      TIMESTAMP,
+    file_path   TEXT NOT NULL,
+    size_bytes  INTEGER
 );
 ```
 
+See [`backend/app/core/db.py`](backend/app/core/db.py) for the version the application actually runs against.
+
 ## API reference
 
-Full interactive docs at `/docs`. Summary:
+The full interactive documentation is at `/docs`. In summary:
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| GET/POST | `/cameras` | List / register cameras |
+| GET/POST | `/cameras` | List or register cameras |
 | GET | `/cameras/{id}/stream` | MJPEG live stream |
-| GET | `/cameras/{id}/snapshot` | Single still JPEG (zone editor) |
+| GET | `/cameras/{id}/snapshot` | Single still frame, used by the zone editor |
 | GET | `/cameras/{id}/zones` | Zones for a camera |
-| POST/PUT/DELETE | `/zones`, `/zones/{id}` | Create / update / remove a zone |
-| GET | `/events` | List events (filter by camera, type, time range) |
-| GET | `/events/{id}`, `/events/{id}/thumbnail` | Event detail / thumbnail image |
+| POST/PUT/DELETE | `/zones`, `/zones/{id}` | Create, update, or remove a zone |
+| GET | `/events` | List events, filterable by camera, type, or time range |
+| GET | `/events/{id}`, `/events/{id}/thumbnail` | Event detail or thumbnail image |
 | POST | `/events/{id}/acknowledge` | Dismiss an alert |
-| GET | `/recordings/{camera_id}` | Segments in a time window |
-| GET | `/playback` | Stream a recording by `event_id` or `camera_id`+`ts` |
-| GET | `/dashboard/stats`, `/analytics` | Dashboard tiles / analytics view data |
+| GET | `/recordings/{camera_id}` | Segments within a time window |
+| GET | `/playback` | Stream a recording, seeked by event ID or by camera and timestamp |
+| GET | `/dashboard/stats`, `/analytics` | Dashboard tile data, analytics data |
 | WS | `/ws/events` | Real-time event push |
 
 ## What's built vs. roadmap
 
-**Built:** everything in the table above, plus the full 4-layer detection pipeline, zone editor, and dashboard/analytics — see `prd.md` Section 5 for the original scope split (MVP vs. win-boosters), all of which is implemented.
+Everything in the tables above is implemented and has been re-verified end to end — backend boot, both verification scripts, all six frontend pages, and interaction tests for acknowledging an alert and clicking a timeline marker to seek. `prd.md` Section 5 has the original scope split between the MVP and the two win-booster features (zones and analytics); both are built.
 
-**Explicitly out of scope for this prototype** (see `prd.md` Section 20): real RTSP/ONVIF camera integration, cloud storage/retention, authentication/roles/audit trails, face/license-plate recognition, native mobile apps, direct integration with A-1's Vigil PIDS sensor network, edge deployment.
+Deliberately out of scope for this prototype: real RTSP or ONVIF camera integration, cloud storage and retention, authentication and audit trails, face or license-plate recognition, native mobile apps, direct integration with A-1's Vigil PIDS sensor network, and edge deployment. These are listed as roadmap items in `prd.md` Section 20.
 
-**Worth knowing for anyone extending this:** Ultralytics YOLOv8 is AGPL-3.0 licensed for non-commercial/open use (a commercial license is available separately from Ultralytics) — fine for this prototype and demo, but a real product decision for A-1 if this pipeline goes further.
+One known limitation: under heavy CPU load, a gap of more than a few seconds between qualifying detections can reset an object's tracked dwell time, which occasionally produces a duplicate event sooner than the cooldown would otherwise allow. This comes from tracking by zone and object class rather than true multi-object identity, and is noted in [`backend/app/services/tracker.py`](backend/app/services/tracker.py).
+
+Ultralytics YOLOv8 is AGPL-3.0 licensed for non-commercial use, with a separate commercial license available from Ultralytics. That's fine for this prototype, but worth flagging as a real decision if the pipeline goes further with A-1.
 
 ## Acknowledgements
 
-Third-party libraries, models, and sample assets used in this project:
-
-- **[Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics)** (AGPL-3.0) — object detection model (`yolov8n.pt`, downloaded from Ultralytics' official GitHub releases)
-- **[OpenCV](https://opencv.org/)** (Apache 2.0) — video capture, MOG2 background subtraction, video I/O
-- **[Cisco OpenH264](https://github.com/cisco/openh264)** ([binary license](http://www.openh264.org/BINARY_LICENSE.txt)) — H.264 video encoder, required so recorded segments play in `<video>` (OpenCV's bundled FFmpeg has no H.264 encoder without it); binary vendored at `backend/vendor/openh264-2.5.0-win64.dll`
-- **[FastAPI](https://fastapi.tiangolo.com/)** (MIT) — backend framework, auto-generated OpenAPI docs
-- **[React](https://react.dev/)** (MIT), **[Vite](https://vitejs.dev/)** (MIT), **[Tailwind CSS](https://tailwindcss.com/)** (MIT), **[Recharts](https://recharts.org/)** (MIT), **[react-router-dom](https://reactrouter.com/)** (MIT) — frontend
-- **Sample surveillance clips** — [Mixkit](https://mixkit.co/) (Mixkit Stock Video Free License, no attribution required, free for commercial/personal use):
-  - ["Two thieves recorded on a security camera"](https://mixkit.co/free-stock-video/two-thieves-recorded-on-a-security-camera-31372/) — intrusion demo clip
+- [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics) (AGPL-3.0) — object detection model, weights downloaded from Ultralytics' official GitHub releases
+- [OpenCV](https://opencv.org/) (Apache 2.0) — video capture, MOG2 background subtraction, video I/O
+- [Cisco OpenH264](https://github.com/cisco/openh264) ([binary license](http://www.openh264.org/BINARY_LICENSE.txt)) — H.264 encoder, vendored at `backend/vendor/openh264-2.5.0-win64.dll`, needed so recordings play in a browser
+- [FastAPI](https://fastapi.tiangolo.com/) (MIT) — backend framework and OpenAPI docs
+- [React](https://react.dev/), [Vite](https://vitejs.dev/), [Tailwind CSS](https://tailwindcss.com/), [Recharts](https://recharts.org/), [react-router-dom](https://reactrouter.com/) (all MIT) — frontend
+- Sample surveillance clips from [Mixkit](https://mixkit.co/) (Mixkit Stock Video Free License, no attribution required):
+  - ["Two thieves recorded on a security camera"](https://mixkit.co/free-stock-video/two-thieves-recorded-on-a-security-camera-31372/) — intrusion clip
   - ["Tree, wind and clouds in the blue sky"](https://mixkit.co/free-stock-video/tree-wind-and-clouds-in-the-blue-sky-30260/) — false-positive control clip
-  - ["Footsteps of a young man walking down the street"](https://mixkit.co/free-stock-video/footsteps-of-a-young-man-walking-down-the-street-4893/) — pedestrian/zone-containment demo clip
-  - ["Cars passing on a street in a town"](https://mixkit.co/free-stock-video/cars-passing-on-a-street-in-a-town-2872/) — vehicle-class detection demo clip
+  - ["Footsteps of a young man walking down the street"](https://mixkit.co/free-stock-video/footsteps-of-a-young-man-walking-down-the-street-4893/) — pedestrian clip
+  - ["Cars passing on a street in a town"](https://mixkit.co/free-stock-video/cars-passing-on-a-street-in-a-town-2872/) — vehicle clip
 
 ---
 
-_See [`prd.md`](prd.md) for the full requirements document this build follows, including the 5-day milestone plan, functional requirements table, and demo video script._
+See [`prd.md`](prd.md) for the full requirements document this build follows, including the milestone plan and the demo video script.
