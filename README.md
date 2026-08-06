@@ -43,7 +43,7 @@ A raw motion detector fires on everything that moves. This pipeline layers four 
 1. **Motion pre-filter (OpenCV MOG2)** — cheap background subtraction gates the expensive model; YOLO only runs on frames where something actually moved.
 2. **Object-class filter (YOLOv8)** — the moving thing must classify as `person`, `car`, `truck`, `bus`, `bicycle`, or `motorcycle`. Leaves, shadows, and camera noise are discarded before a zone is ever checked.
 3. **Zone containment** — the detection's centroid must fall inside an operator-drawn, enabled polygon (point-in-polygon test, normalized coordinates).
-4. **Dwell + cooldown** — a momentary detection doesn't escalate instantly (configurable dwell seconds); once an event fires, a cooldown window (default 8s) suppresses duplicate alerts for the same zone+class.
+4. **Dwell + cooldown** — a momentary detection doesn't escalate instantly (configurable dwell seconds); once an event fires, a cooldown window (default 30s) suppresses duplicate alerts for the same zone+class.
 
 The included sample cameras are chosen to demonstrate this directly: **Perimeter Cam 2 (Tree Line)** runs a wind/foliage clip and — verified, not assumed — produces **zero events** across the whole pipeline, while the other three cameras (intrusion, pedestrian, vehicle clips) fire real, correctly-classified events.
 

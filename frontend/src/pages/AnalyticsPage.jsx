@@ -66,7 +66,7 @@ export default function AnalyticsPage() {
                   labelStyle={{ color: '#e5e9f0' }}
                   cursor={{ fill: 'rgba(59,130,246,0.08)' }}
                 />
-                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={56} />
               </BarChart>
             </ResponsiveContainer>
           )}

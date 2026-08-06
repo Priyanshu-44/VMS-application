@@ -37,7 +37,16 @@ RELEVANT_CLASSES = {"person", "car", "truck", "bus", "bicycle", "motorcycle"}
 DEFAULT_CONFIDENCE_THRESHOLD = 0.5
 DETECTION_INFERENCE_FLOOR = 0.2      # run YOLO at this floor; per-zone sensitivity filters on top
 DEFAULT_DWELL_SECONDS = 2
-EVENT_COOLDOWN_SECONDS = 8          # suppress duplicate events per track
+# 8s was too short for looping demo clips: Track.dwell_seconds() is
+# last_seen - first_seen, and a continuously-visible object's track never
+# resets (STALE_AFTER_SECONDS=6s never elapses), so dwell grows unbounded
+# for the whole session and the track stays permanently classified
+# "loitering," re-firing every cooldown window indefinitely. Verified live:
+# 8s cooldown produced 110 events on one camera in 17 minutes (96 of them
+# duplicate "loitering" re-fires) -- exactly the spam PRD Section 7.4 says
+# this layer must prevent. 30s keeps re-escalation for genuine loitering
+# while keeping the demo's event stream to roughly one event per clip loop.
+EVENT_COOLDOWN_SECONDS = 30          # suppress duplicate events per track
 ANALYSIS_FPS = 12                    # throttle detection loop (NFR: keep UI responsive)
 MOTION_MIN_AREA = 800                # px^2, ignore tiny MOG2 blobs (noise)
 
