@@ -9,6 +9,8 @@ from app.core.config import MJPEG_BOUNDARY
 from app.core.db import db_session
 from app.models.schemas import CameraCreate, CameraOut, ZoneOut
 from app.services.camera_manager import camera_manager
+from app.services.event_pipeline import pipeline_manager
+from app.services.recorder import recorder_manager
 
 router = APIRouter(prefix="/cameras", tags=["cameras"])
 
@@ -41,7 +43,18 @@ def create_camera(cam: CameraCreate):
         row = conn.execute(
             "SELECT * FROM cameras WHERE id = ?", (cur.lastrowid,)
         ).fetchone()
-        return _row_to_camera(row)
+
+    # A camera added after startup only gets its capture thread lazily, the
+    # first time something requests its stream/snapshot (_ensure_capture_started
+    # below). Recording and detection have no equivalent lazy path, so without
+    # this a camera added through this endpoint would show up live but never
+    # record or generate events. Wire it up the same way app.main's startup
+    # event does for cameras that already existed at boot.
+    camera_manager.register(row["id"], row["source"], row["name"])
+    recorder_manager.start(row["id"])
+    pipeline_manager.start(row["id"])
+
+    return _row_to_camera(row)
 
 
 @router.get("/{camera_id}", response_model=CameraOut)
