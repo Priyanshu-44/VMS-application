@@ -38,6 +38,12 @@ export default function EventsPage() {
   const cameraById = useMemo(() => Object.fromEntries(cameras.map((c) => [c.id, c])), [cameras])
 
   const visible = events.filter((e) => {
+    // events can arrive live over the WebSocket independent of the filtered
+    // fetch in load() above, so filters need to be re-applied here too --
+    // otherwise a live push for a camera/type outside the current filter
+    // slips into the list.
+    if (cameraFilter && String(e.camera_id) !== String(cameraFilter)) return false
+    if (typeFilter && e.type !== typeFilter) return false
     if (ackFilter === 'unacknowledged' && e.acknowledged) return false
     if (ackFilter === 'acknowledged' && !e.acknowledged) return false
     return true
