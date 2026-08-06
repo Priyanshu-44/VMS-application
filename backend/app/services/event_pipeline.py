@@ -32,6 +32,16 @@ ZONE_CACHE_REFRESH_SECONDS = 2.0
 LOITER_MULTIPLIER = 2.5   # dwell beyond zone.dwell_seconds * this => "loitering" instead of "intrusion"
 THUMB_PADDING = 0.15      # extra context around the bbox, as a fraction of bbox size
 
+# Same palette as the frontend timeline's TYPE_COLORS (Timeline.jsx), in BGR
+# since OpenCV draws in BGR rather than RGB -- keeps thumbnail severity color
+# consistent with the marker color the operator already sees on the timeline.
+BOX_COLOR_BGR = {
+    "intrusion": (68, 68, 239),    # #ef4444
+    "loitering": (11, 158, 245),   # #f59e0b
+    "motion": (168, 151, 139),     # #8b97a8
+}
+BOX_THICKNESS = 3
+
 
 class DetectionPipeline:
     def __init__(self, camera_id: int):
@@ -62,17 +72,25 @@ class DetectionPipeline:
         self._zones_cache_ts = now
         return self._zones_cache
 
-    def _save_thumbnail(self, frame, det: Detection) -> str:
-        x1, y1, x2, y2 = det.bbox
-        bw, bh = x2 - x1, y2 - y1
+    def _save_thumbnail(self, frame, det: Detection, event_type: str) -> str:
+        bx1, by1, bx2, by2 = (int(v) for v in det.bbox)
+        bw, bh = bx2 - bx1, by2 - by1
         h, w = frame.shape[:2]
-        x1 = max(0, int(x1 - bw * THUMB_PADDING))
-        y1 = max(0, int(y1 - bh * THUMB_PADDING))
-        x2 = min(w, int(x2 + bw * THUMB_PADDING))
-        y2 = min(h, int(y2 + bh * THUMB_PADDING))
-        crop = frame[y1:y2, x1:x2]
+
+        # Draw on a copy, not the shared frame -- this same frame object is
+        # reused across every zone/detection in the current tick, so drawing
+        # in place would leak earlier boxes into later, unrelated thumbnails.
+        annotated = frame.copy()
+        color = BOX_COLOR_BGR.get(event_type, BOX_COLOR_BGR["motion"])
+        cv2.rectangle(annotated, (bx1, by1), (bx2, by2), color, BOX_THICKNESS)
+
+        x1 = max(0, int(bx1 - bw * THUMB_PADDING))
+        y1 = max(0, int(by1 - bh * THUMB_PADDING))
+        x2 = min(w, int(bx2 + bw * THUMB_PADDING))
+        y2 = min(h, int(by2 + bh * THUMB_PADDING))
+        crop = annotated[y1:y2, x1:x2]
         if crop.size == 0:
-            crop = frame
+            crop = annotated
 
         filename = f"{uuid.uuid4().hex}.jpg"
         path = THUMBNAILS_DIR / filename
@@ -81,7 +99,7 @@ class DetectionPipeline:
 
     def _create_event(self, zone: dict, det: Detection, dwell_seconds: float, frame, now: float):
         event_type = "loitering" if dwell_seconds >= zone["dwell_seconds"] * LOITER_MULTIPLIER else "intrusion"
-        thumbnail_path = self._save_thumbnail(frame, det)
+        thumbnail_path = self._save_thumbnail(frame, det, event_type)
 
         rec_state = recorder_manager.get(self.camera_id)
         clip_path = rec_state.current_segment_path if rec_state else None
