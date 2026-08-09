@@ -1,10 +1,8 @@
 # 3-Page PDF Content — ready to paste into Canva/PowerPoint/Google Slides
 
-Adapted from `prd.md` Section 18. Filled in with real numbers and specifics
-from this build — not placeholders, except where marked `[SCREENSHOT: ...]`.
-Take those screenshots from your own running instance (see README setup)
-and drop them in; I don't have a way to capture and insert images into a
-PDF in this environment, so that step is yours.
+Screenshots are already captured at `docs/screenshots/` — use those files
+directly, no need to retake them. File names are noted at each screenshot
+slot below.
 
 **File name on submission:** `ByteBreakers_NationalInstituteOfTechnologyDelhi_A-1Launchpad_2026.pdf`
 
@@ -36,7 +34,7 @@ Sample clips (looped, 4 cameras)
 FastAPI backend — MJPEG stream, H.264 segment recording
         │
         ▼
-AI pipeline — MOG2 motion gate → YOLOv8 classify → zone test → dwell/cooldown
+Detection pipeline — MOG2 motion gate → YOLOv8 classify → zone test → dwell/cooldown
         │
         ▼
 SQLite + clips/thumbnails on disk
@@ -50,7 +48,7 @@ React frontend — live grid · timeline · dashboard · zone editor · analytic
 **Tech stack:** Python 3.13 + FastAPI · OpenCV + MOG2 · Ultralytics YOLOv8n
 · SQLite · React + Vite + Tailwind CSS · Recharts · WebSocket
 
-`[SCREENSHOT: Live Grid page, all 4 camera tiles visible]`
+**Screenshot:** `docs/screenshots/live_grid.png` — all 4 camera tiles live
 
 ---
 
@@ -63,42 +61,49 @@ React frontend — live grid · timeline · dashboard · zone editor · analytic
 | 1. Motion pre-filter (MOG2) | Cheap background subtraction gates the expensive model | YOLO only runs when something actually moves |
 | 2. Object-class filter (YOLOv8) | Must classify as person/car/truck/bus/bicycle/motorcycle | Leaves, shadows, birds discarded before zone check |
 | 3. Zone containment | Detection centroid must fall inside an enabled operator-drawn polygon | A person on a public path outside the fence doesn't alert; crossing the perimeter does |
-| 4. Dwell + cooldown | Escalation requires N seconds of continued presence; cooldown blocks duplicate re-alerts | One intruder generates one alert, not fifty |
+| 4. Dwell + cooldown | Escalation requires N seconds of continued presence; a 30s cooldown blocks duplicate re-alerts | One intruder generates one alert, not fifty |
 
-**Verified result, this build, this session:** 85 raw motion triggers →
-12 confirmed events = **85.9% false-alarm reduction**, with the
-wind/foliage test camera sitting at **zero** detections throughout.
+**Verified result, this build:** 878 raw motion triggers → 78 confirmed
+events = **91% false-alarm reduction**, with the wind/foliage test camera
+sitting at **zero** detections throughout. (Recompute this from your own
+Analytics page right before recording — it's a live figure, not fixed, and
+will differ slightly session to session; use whatever you actually see.)
 
 **Core features:**
 - Live multi-camera grid with real-time alert flashing
 - Interactive canvas timeline — colored event markers, hover-to-preview
   thumbnail, **one-click seek** to any event's exact footage
+- Severity-coded bounding boxes on event thumbnails — red for intrusion,
+  orange for loitering
 - Zone editor — draw a polygon on a live paused frame, tune sensitivity
   and dwell time per zone, no restart required
 - Dashboard — camera status, active alerts, storage usage, recent
   detections, all live via WebSocket
 - Analytics — false-alarm reduction stat, detections/hour, detections/zone
 
-`[SCREENSHOT: Timeline with event markers + hover tooltip visible]`
-`[SCREENSHOT: Zone editor mid-draw, polygon points visible on a paused frame]`
-`[SCREENSHOT: Dashboard, 4 tiles visible with live data]`
+**Screenshots:**
+- `docs/screenshots/playback_timeline.png` — timeline with a marker clicked, seeking to that event
+- `docs/screenshots/zone_editor.png` — polygon drawn on a paused frame
+- `docs/screenshots/dashboard.png` — 4 tiles with live data
 
 ---
 
 ## Page 3 — Impact & Links
 
 **Metrics (from this build's own verification, not projected):**
-- **85.9%** false-alarm reduction vs. raw motion detection
+- **91%** false-alarm reduction vs. raw motion detection
 - **< 3 seconds**, zero tool-switching, to go from a live alert to
   reviewing that exact moment's footage
 - **1 click** from any timeline marker to seeked playback
 - Detection loop runs on CPU alone — no GPU required for the demo
+- Tested end-to-end on both the sample clips and a real live webcam feed
 
 **What's built (all of it, verified live — not mocked):**
 Live grid, continuous H.264 recording, full 4-layer detection pipeline,
-event generation with real thumbnails and clip references, interactive
-timeline with click-to-seek, zone editor, dashboard, analytics — every P0
-requirement and both win-booster differentiators from the spec.
+event generation with real thumbnails (severity-colored bounding boxes)
+and clip references, interactive timeline with click-to-seek, zone editor,
+dashboard, analytics — every P0 requirement and both win-booster
+differentiators from the spec.
 
 **What's roadmap, deliberately not built for this prototype:**
 Real RTSP/ONVIF camera integration, cloud storage & retention, user
@@ -112,7 +117,17 @@ dwell filtering logic applies whether the sensor is a camera or a fence
 vibration sensor.
 
 **Links:**
-- GitHub: `https://github.com/<your-username>/smart-vms` _(fill in after push)_
-- Demo video: _[fill in after recording]_
+- GitHub: `https://github.com/Priyanshu-44/VMS-application`
+- Demo video: `https://drive.google.com/file/d/1P0PAuc7I6PgwUa2UF9chmtmrAyLpWdFZ/view?usp=sharing`
 
-`[SCREENSHOT: Analytics page, false-alarm-reduction stat block visible]`
+**Screenshot:** `docs/screenshots/analytics.png` — false-alarm-reduction stat block
+
+---
+
+## Cover page (if your template needs one separately)
+
+- Title: **Smart VMS — AI Intrusion Detection & False-Alarm Suppression**
+- Case Study: Smart Video Management System (VMS)
+- Team: Byte Breakers
+- College: National Institute of Technology Delhi
+- Event: A-1 Launchpad 2026 — Round 2, Software Development / AI-ML track
