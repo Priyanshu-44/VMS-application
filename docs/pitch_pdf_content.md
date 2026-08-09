@@ -119,6 +119,8 @@ vibration sensor.
 **Links:**
 - GitHub: `https://github.com/Priyanshu-44/VMS-application`
 - Demo video: `https://drive.google.com/file/d/1P0PAuc7I6PgwUa2UF9chmtmrAyLpWdFZ/view?usp=sharing`
+- Resume — Team Member 1: `https://drive.google.com/file/d/1aHB2G16ht8lA0CwcPx0MkCuKXVSJsq4V/view?usp=sharing`
+- Resume — Team Member 2: `https://drive.google.com/file/d/1WroLWcwPpYsCe8TEplbXUQSi5SL-CN9j/view?usp=drive_link`
 
 **Screenshot:** `docs/screenshots/analytics.png` — false-alarm-reduction stat block
 
