@@ -284,5 +284,3 @@ Ultralytics YOLOv8 is AGPL-3.0 licensed for non-commercial use, with a separate 
   - ["Cars passing on a street in a town"](https://mixkit.co/free-stock-video/cars-passing-on-a-street-in-a-town-2872/) — vehicle clip
 
 ---
-
-See [`prd.md`](prd.md) for the full requirements document this build follows, including the milestone plan and the demo video script.
