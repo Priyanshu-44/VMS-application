@@ -188,7 +188,6 @@ docs/
   screenshots/
   demo_script.md
   pitch_pdf_content.md
-prd.md
 ```
 
 ## Database schema
@@ -262,9 +261,9 @@ The full interactive documentation is at `/docs`. In summary:
 
 ## What's built vs. roadmap
 
-Everything in the tables above is implemented and has been re-verified end to end — backend boot, both verification scripts, all six frontend pages, and interaction tests for acknowledging an alert and clicking a timeline marker to seek. `prd.md` Section 5 has the original scope split between the MVP and the two win-booster features (zones and analytics); both are built.
+Everything in the tables above is implemented and has been re-verified end to end — backend boot, both verification scripts, all six frontend pages, and interaction tests for acknowledging an alert and clicking a timeline marker to seek. The original scope split the MVP from two win-booster features (zones and analytics); both are built.
 
-Deliberately out of scope for this prototype: real RTSP or ONVIF camera integration, cloud storage and retention, authentication and audit trails, face or license-plate recognition, native mobile apps, direct integration with A-1's Vigil PIDS sensor network, and edge deployment. These are listed as roadmap items in `prd.md` Section 20.
+Deliberately out of scope for this prototype: real RTSP or ONVIF camera integration, cloud storage and retention, authentication and audit trails, face or license-plate recognition, native mobile apps, direct integration with A-1's Vigil PIDS sensor network, and edge deployment. These remain roadmap items.
 
 One known limitation: under heavy CPU load, a gap of more than a few seconds between qualifying detections can reset an object's tracked dwell time, which occasionally produces a duplicate event sooner than the cooldown would otherwise allow. This comes from tracking by zone and object class rather than true multi-object identity, and is noted in [`backend/app/services/tracker.py`](backend/app/services/tracker.py).
 

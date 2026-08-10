@@ -31,3 +31,6 @@ Thumbs.db
 
 # Local Claude Code session settings (not project config)
 .claude/settings.local.json
+
+# Case-study brief supplied by A-1 — reference material, not project deliverable
+*.docx

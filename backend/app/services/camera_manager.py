@@ -81,6 +81,14 @@ class CameraManager:
         cap_source = state.source if state.is_file else int(state.source)
         cap = cv2.VideoCapture(cap_source)
 
+        if not state.is_file:
+            # Live webcams otherwise capture at native resolution (e.g. 1920x1080),
+            # producing ~20MB/10s recording segments with no cap -- slow to buffer
+            # in the <video> player and heavier on CPU-only YOLO inference. Sample
+            # clips are already reasonably sized, so leave those untouched.
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
         if not cap.isOpened():
             state.online = False
             return

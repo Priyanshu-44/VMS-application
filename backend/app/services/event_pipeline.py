@@ -101,9 +101,15 @@ class DetectionPipeline:
         event_type = "loitering" if dwell_seconds >= zone["dwell_seconds"] * LOITER_MULTIPLIER else "intrusion"
         thumbnail_path = self._save_thumbnail(frame, det, event_type)
 
+        # Use a fresh timestamp here, not the `now` passed in from _tick(). That
+        # `now` is captured before Detector.detect() runs, which under CPU
+        # contention (several camera pipelines detecting concurrently) can take
+        # seconds -- long enough for the recorder to rotate to a new segment in
+        # the meantime. Diffing a stale `now` against the *new* segment's start
+        # produced negative clip_offset values (seen up to -18s in the DB).
         rec_state = recorder_manager.get(self.camera_id)
         clip_path = rec_state.current_segment_path if rec_state else None
-        clip_offset = (now - rec_state.current_segment_start_ts) if rec_state else None
+        clip_offset = (time.time() - rec_state.current_segment_start_ts) if rec_state else None
 
         with db_session() as conn:
             cur = conn.execute(
