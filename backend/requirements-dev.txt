@@ -1,5 +1,0 @@
-# Dev/test-only dependencies, on top of the app's own requirements.
--r requirements.txt
-
-pytest>=8.0
-httpx>=0.28          # required by fastapi.testclient.TestClient

@@ -3,7 +3,6 @@ backend/.venv/
 __pycache__/
 *.pyc
 *.egg-info/
-.pytest_cache/
 
 # YOLO weights (auto-downloaded, don't bloat the repo)
 *.pt
