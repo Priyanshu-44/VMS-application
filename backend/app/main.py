@@ -1,5 +1,5 @@
 """
-Envision backend entry point.
+Smart VMS backend entry point.
 
 Run with:  uvicorn app.main:app --reload --port 8000   (from backend/)
 Interactive API docs:  http://localhost:8000/docs
@@ -18,7 +18,7 @@ from app.services.recorder import recorder_manager
 from app.services.ws_manager import ws_manager
 
 app = FastAPI(
-    title="Envision API",
+    title="Smart VMS API",
     description=(
         "Video Management System with AI intrusion detection and "
         "false-alarm suppression (zones, class filter, dwell/debounce)."
@@ -60,7 +60,7 @@ def on_startup():
 
 @app.get("/", tags=["health"])
 def root():
-    return {"status": "ok", "service": "envision-backend"}
+    return {"status": "ok", "service": "smart-vms-backend"}
 
 
 @app.get("/health", tags=["health"])
