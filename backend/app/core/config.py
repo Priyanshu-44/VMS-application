@@ -1,5 +1,5 @@
 """
-Central configuration for the Smart VMS backend.
+Central configuration for the Envision backend.
 Paths are resolved relative to the repo root so the app can be run from
 anywhere (uvicorn app.main:app run from backend/, or packaged).
 """
