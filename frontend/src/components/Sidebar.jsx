@@ -37,7 +37,7 @@ export default function Sidebar() {
             </svg>
           </div>
           <div>
-            <div className="text-sm font-semibold leading-tight">Envision</div>
+            <div className="text-sm font-semibold leading-tight">Smart VMS</div>
             <div className="text-[11px] text-text-dim leading-tight">A-1 Perimeter Security</div>
           </div>
         </div>

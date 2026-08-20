@@ -1,4 +1,4 @@
-# Envision — AI Intrusion Detection & False-Alarm Suppression
+# Smart VMS — AI Intrusion Detection & False-Alarm Suppression
 
 **Team Byte Breakers** · National Institute of Technology Delhi
 Built for **A-1 Launchpad 2026 — Round 2** (Software Development / AI-ML track), Case Study: Smart Video Management System.
@@ -7,7 +7,7 @@ Built for **A-1 Launchpad 2026 — Round 2** (Software Development / AI-ML track
 
 Perimeter security operators are flooded with false alerts from wind, animals, and moving foliage — enough that a genuine intrusion can get lost in the noise. This project is a video management system that keeps live monitoring and recorded playback in one interface, and filters detections through zones, object class, and dwell time so an alert generally means something actually happened. On our own test runs, that pipeline cuts false triggers by more than 90% compared to raw motion detection; the exact figure depends on the session, since it's computed from live detections rather than fixed.
 
-**Repository:** https://github.com/Priyanshu-44/Envision
+**Repository:** https://github.com/Priyanshu-44/VMS-application
 **Demo video:** https://drive.google.com/file/d/1P0PAuc7I6PgwUa2UF9chmtmrAyLpWdFZ/view?usp=sharing
 **API docs (when running locally):** http://localhost:8000/docs
 
