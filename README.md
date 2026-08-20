@@ -21,7 +21,6 @@ Perimeter security operators are flooded with false alerts from wind, animals, a
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
-- [Testing](#testing)
 - [Project structure](#project-structure)
 - [Database schema](#database-schema)
 - [API reference](#api-reference)
@@ -160,32 +159,6 @@ Restart uvicorn afterward.
 ### macOS and Linux
 
 `backend/vendor/openh264-2.5.0-win64.dll` is Windows-only. Elsewhere, either install a system `ffmpeg` with libx264, which OpenCV will pick up automatically, or download the matching OpenH264 binary from [Cisco's releases](https://github.com/cisco/openh264/releases) and load it the platform-appropriate way — `.dylib` and `DYLD_LIBRARY_PATH` on macOS, `.so` and `LD_LIBRARY_PATH` on Linux. `app/core/config.py` currently only wires up the Windows path.
-
-## Testing
-
-The pipeline logic that actually matters for correctness — zone containment, dwell/cooldown
-tracking, request validation, and the CRUD APIs built on top of them — has an automated `pytest`
-suite under `backend/tests/`, run against an isolated temp SQLite database so it never touches
-`data/db/vms.sqlite3`.
-
-```bash
-cd backend
-.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.venv\Scripts\python.exe -m pytest -v
-```
-
-What's covered: `point_in_polygon` (including a concave-polygon case a naive bounding-box check
-would get wrong), `CameraTracker`'s dwell accumulation / cooldown gating / stale-track pruning, the
-`PipelineStats` counters behind the Analytics headline number, the Pydantic request validators, and
-integration tests for the zone and event APIs (CRUD, 404s, the 409-on-delete-with-history rule).
-
-What's intentionally not automated yet, and how it's actually verified: the live capture → motion
-gate → YOLO → recording pipeline is exercised end-to-end by `scripts/verify_yolo.py` and
-`scripts/test_ws.py` (see above) plus manual browser passes across all six pages before each
-milestone — a full harness would mean either a real/mocked camera source and a headless browser
-driver (Playwright), which is a reasonable next step but wasn't necessary to validate this prototype.
-The frontend currently has no automated test suite; its pure logic (`lib/time.js`'s UTC timestamp
-handling) is the highest-value first target if that's added.
 
 ## Project structure
 
