@@ -81,3 +81,16 @@ def init_db():
     """Create tables if they don't exist. Safe to call on every startup."""
     with db_session() as conn:
         conn.executescript(SCHEMA)
+
+
+# A single shared connection for the app's lifetime (sqlite3 module is
+# thread-safe enough for our use with check_same_thread=False + a lock in
+# writers that need it). Kept simple for the prototype.
+_shared_conn: sqlite3.Connection | None = None
+
+
+def get_shared_connection() -> sqlite3.Connection:
+    global _shared_conn
+    if _shared_conn is None:
+        _shared_conn = get_connection()
+    return _shared_conn
