@@ -13,7 +13,9 @@ frontend/node_modules/
 frontend/dist/
 
 # Data (generated at runtime / large binaries — sample clips tracked via README instructions or Git LFS if needed)
-data/db/*.sqlite3
+# *.sqlite3* (not just *.sqlite3) so WAL-mode sidecar files (-wal, -shm) are
+# ignored too, not just the main db file.
+data/db/*.sqlite3*
 data/recordings/*
 data/thumbnails/*
 !data/recordings/.gitkeep

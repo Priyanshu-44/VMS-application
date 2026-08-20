@@ -61,6 +61,15 @@ def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
+    # This app genuinely has concurrent writers -- the recorder thread and
+    # detection thread per camera, plus API request handlers, each open
+    # their own connection via db_session(). SQLite's default rollback-
+    # journal mode serializes writers and can raise "database is locked"
+    # under that contention. WAL lets readers and a writer proceed
+    # concurrently; busy_timeout makes a writer that does contend retry for
+    # up to 5s instead of failing immediately.
+    conn.execute("PRAGMA journal_mode = WAL;")
+    conn.execute("PRAGMA busy_timeout = 5000;")
     return conn
 
 
