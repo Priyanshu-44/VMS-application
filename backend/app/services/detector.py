@@ -3,6 +3,7 @@ Layer 2 of the false-alarm pipeline: YOLOv8 object classification, run only
 on frames that already passed the motion gate. Returns detections with
 normalized centroids so they can be tested against zone polygons directly.
 """
+import threading
 from dataclasses import dataclass
 
 import numpy as np
@@ -25,6 +26,7 @@ class Detector:
     (each call is stateless), avoiding N separate model loads."""
 
     _instance: "Detector | None" = None
+    _instance_lock = threading.Lock()
 
     def __init__(self):
         self.model = YOLO(YOLO_MODEL)
@@ -33,8 +35,16 @@ class Detector:
 
     @classmethod
     def instance(cls) -> "Detector":
+        # Double-checked locking: every camera's detection thread calls this
+        # from event_pipeline.py's _tick(), and they all start near-
+        # simultaneously at server boot. An unguarded None-check-then-set
+        # here is a real race -- two threads can both see cls._instance as
+        # None before either assigns, double-constructing (and
+        # double-loading) the YOLO model.
         if cls._instance is None:
-            cls._instance = Detector()
+            with cls._instance_lock:
+                if cls._instance is None:
+                    cls._instance = Detector()
         return cls._instance
 
     def detect(self, frame: np.ndarray) -> list[Detection]:

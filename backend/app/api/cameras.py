@@ -95,6 +95,11 @@ def _ensure_capture_started(camera_id: int):
 
 def _mjpeg_generator(camera_id: int):
     state = camera_manager.get(camera_id)
+    if state is None:
+        # Camera vanished between _ensure_capture_started() and here (e.g.
+        # unregistered concurrently) -- end the stream cleanly rather than
+        # dereferencing None below.
+        return
     boundary = MJPEG_BOUNDARY
     last_index = -1
     while True:
